@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>rex • Instagram</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #000000;
+            --bg-surface: #0f0a0d;
+            --accent-pink: #ff2d95;
+            --accent-red: #ff1744;
+            --accent-gradient: linear-gradient(135deg, #ff2d95, #ff1744);
+            --border-color: #2a1f24;
+            --text-main: #f5e6eb;
+            --text-muted: #a68a95;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Class applied to blur everything behind the modal */
+        .content-blur {
+            filter: blur(12px);
+            pointer-events: none;
+            transition: filter 0.3s ease;
+        }
+
+        .ig-container {
+            max-width: 480px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            border-left: 1px solid #222;
+            border-right: 1px solid #222;
+        }
+
+        /* Top Bar */
+        .ig-topbar {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .ig-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Stories */
+        .stories-bar {
+            display: flex;
+            gap: 12px;
+            padding: 12px 8px;
+            overflow-x: auto;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .story-circle {
+            width: 68px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        .story-avatar {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            background: #2a1f24;
+        }
+
+        /* Feed */
+        .feed {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .post {
+            margin-bottom: 20px;
+            background: var(--bg-surface);
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            gap: 10px;
+        }
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-pink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .post-username {
+            font-weight: 600;
+        }
+        .post-image-placeholder {
+            width: 100%;
+            height: 420px;
+            background: linear-gradient(45deg, #1a0f14, #3a2a32);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #555;
+        }
+        .post-image-real {
+            width: 100%;
+            height: 420px;
+            object-fit: cover;
+            display: block;
+        }
+        .post-actions {
+            padding: 8px 16px;
+            display: flex;
+            gap: 16px;
+            font-size: 1.5rem;
+        }
+        .post-actions span:hover { color: var(--accent-pink); }
+        .post-likes {
+            padding: 0 16px;
+            font-weight: 600;
+        }
+        .post-caption {
+            padding: 0 16px 12px;
+            line-height: 1.4;
+        }
+
+        /* Bottom Navigation */
+        .ig-bottom-nav {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            background: rgba(0,0,0,0.98);
+            border-top: 1px solid var(--border-color);
+            font-size: 1.6rem;
+        }
+        .nav-item {
+            cursor: pointer;
+            padding: 8px;
+        }
+        .nav-item.active { color: var(--accent-pink); }
+
+        /* Post Creator */
+        .create-post-bar {
+            padding: 12px 16px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .create-post-inputs {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .create-post-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            padding: 8px 0;
+        }
+        .create-post-bar input::placeholder {
+            color: #666;
+        }
+        .image-input-wrapper {
+            width: 100%;
+            padding-left: 44px; /* Align with text input past avatar */
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Contact */
+        .contact-pill {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            background: var(--accent-gradient);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 9999px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(255, 45, 149, 0.4);
+            z-index: 1000;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 18+ Age Notification Overlay */
+        .age-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        .age-modal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 320px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(255, 45, 149, 0.3);
+        }
+        .age-modal-box h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            color: var(--accent-pink);
+            margin-bottom: 12px;
+            font-size: 1.5rem;
+        }
+        .age-modal-box p {
+            color: var(--text-main);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .age-btn-group {
+            display: flex;
+            gap: 12px;
+        }
+        .age-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 9999px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .age-btn-yes {
+            background: var(--accent-gradient);
+            color: white;
+        }
+        .age-btn-no {
+            background: #2a1f24;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 18+ Notification Overlay -->
+    <div class="age-modal-overlay" id="ageModal">
+        <div class="age-modal-box">
+            <h2>🔞 Age Verification</h2>
+            <p>Are you 18 years of age or older to enter this site?</p>
+            <div class="age-btn-group">
+                <button class="age-btn age-btn-yes" id="btnYes">Yes (18+)</button>
+                <button class="age-btn age-btn-no" id="btnNo">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container with initial content-blur class -->
+    <div class="ig-container content-blur" id="mainAppContainer">
+
+        <!-- Top Bar -->
+        <div class="ig-topbar">
+            <div class="ig-logo">rex</div>
+            <div style="display:flex; gap:20px; font-size:1.4rem;">
+                <span>❤️</span>
+                <span onclick="showCreatePost()" style="cursor:pointer;">✚</span>
+            </div>
+        </div>
+
+        <!-- Stories -->
+        <div class="stories-bar">
+            <div class="story-circle"><div class="story-avatar">👑</div><small>You</small></div>
+            <div class="story-circle"><div class="story-avatar" style="border-color:#ff1744;">🔥</div><small>Trending</small></div>
+            <div class="story-circle"><div class="story-avatar">🌴</div><small>SL</small></div>
+            <div class="story-circle"><div class="story-avatar">🎵</div><small>Music</small></div>
+        </div>
+
+        <!-- Create Post Bar -->
+        <div class="create-post-bar">
+            <div class="create-post-inputs">
+                <div class="post-avatar" id="creatorAvatar">R</div>
+                <input type="text" id="postInput" placeholder="What's on your mind?">
+                <button onclick="transmitPost()" style="background:var(--accent-pink); color:white; border:none; padding:8px 16px; border-radius:9999px; font-weight:600; cursor:pointer;">Post</button>
+            </div>
+            <div class="image-input-wrapper">
+                <input type="text" id="imageInput" placeholder="Paste an image URL here (Optional)" style="font-size: 0.85rem; border-bottom: 1px solid #333;">
+            </div>
+        </div>
+
+        <!-- Feed -->
+        <div class="feed" id="feedContainer"></div>
+
+        <!-- Bottom Navigation -->
+        <div class="ig-bottom-nav">
+            <div class="nav-item active">🏠</div>
+            <div class="nav-item">🔍</div>
+            <div class="nav-item">🎥</div>
+            <div class="nav-item">🛍️</div>
+            <div class="nav-item" onclick="triggerSignOutClearance()">👤</div>
+        </div>
+    </div>
+
+    <!-- Floating Contact Link to WhatsApp -->
+    <a href="https://wa.me/94741563278" target="_blank" class="contact-pill content-blur" id="contactPill">
+        💬 <strong>0741563278</strong>
+    </a>
+
+    <script>
+        // VERIFIED API URL
+        const API_ENDPOINT = "https://6a3fbacc9b6d371e838122a7.mockapi.io/Istaleen/Comments";
+
+        function syncIdentity() {
+            const name = localStorage.getItem('x_display_name') || "Rex User";
+            document.getElementById('creatorAvatar').textContent = name[0].toUpperCase();
+        }
+
+        async function transmitPost() {
+            const input = document.getElementById('postInput');
+            const imageInput = document.getElementById('imageInput');
+            
+            const text = input.value.trim();
+            const imageUrl = imageInput.value.trim();
+            
+            if (!text && !imageUrl) return; // Don't post if both are empty
+
+            const name = localStorage.getItem('x_display_name') || "Rex User";
+            
+            // Payload sent to your mock API
+            const payload = {
+                user: `${name}||@rexuser`,
+                time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+                body: text,
+                image: imageUrl
+            };
+
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server rejected post: ${response.status}`);
+                }
+
+                // Clear both inputs after success
+                input.value = "";
+                imageInput.value = "";
+                loadFeed(); 
+                
+            } catch(error) {
+                console.error("Failed to transmit post:", error);
+                alert("Failed to post. Check your schema fields or internet connection.");
+            }
+        }
+
+        async function loadFeed() {
+            const container = document.getElementById('feedContainer');
+            try {
+                // cache: "no-store" to ensure all users pull fresh posts!
+                const res = await fetch(API_ENDPOINT, { cache: "no-store" });
+                
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const posts = await res.json();
+                posts.reverse();
+
+                let html = "";
+                posts.forEach(post => {
+                    const userData = post.user || "Unknown||@unknown"; 
+                    const [name] = userData.split('||');
+                    
+                    // Logic to check if an image exists in the database
+                    const imageHtml = post.image 
+                        ? `<img src="${post.image}" alt="Post Image" class="post-image-real" onerror="this.style.display='none';">`
+                        : `<div class="post-image-placeholder">📸</div>`;
+                    
+                    html += `
+                        <div class="post">
+                            <div class="post-header">
+                                <div class="post-avatar">${name[0] ? name[0].toUpperCase() : 'U'}</div>
+                                <div>
+                                    <div class="post-username">${name}</div>
+                                    <small style="color:var(--text-muted);">Sri Lanka</small>
+                                </div>
+                            </div>
+                            
+                            ${imageHtml}
+
+                            <div class="post-actions">
+                                <span>❤️</span>
+                                <span>💬</span>
+                                <span>🔁</span>
+                            </div>
+                            <div class="post-likes">Liked by you and others</div>
+                            <div class="post-caption">
+                                <strong>${name}</strong> ${post.body || ""}
+                            </div>
+                            <div style="padding:0 16px 12px; color:var(--text-muted); font-size:0.85rem;">
+                                ${post.time || 'Just now'}
+                            </div>
+                        </div>`;
+                });
+
+                container.innerHTML = html || `<div style="text-align:center; padding:60px; color:#666;">No posts yet. Share something!</div>`;
+            } catch(e) {
+                console.error("Failed to load feed:", e);
+                container.innerHTML = `<div style="text-align:center; padding:60px; color:#ff1744;">Error loading posts. Please try again.</div>`;
+            }
+        }
+
+        function showCreatePost() {
+            document.getElementById('postInput').focus();
+        }
+
+        function triggerSignOutClearance() {
+            if (confirm("Reset account?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // Initialize
+        document.addEventListener("DOMContentLoaded", () => {
+            // Event Listeners for Age Verification
+            document.getElementById('btnYes').addEventListener('click', () => {
+                document.getElementById('ageModal').style.display = 'none';
+                document.getElementById('mainAppContainer').classList.remove('content-blur');
+                document.getElementById('contactPill').classList.remove('content-blur');
+            });
+            
+            document.getElementById('btnNo').addEventListener('click', () => {
+                alert("You must be 18 or older to view this site.");
+                window.location.href = "https://www.google.com";
+            });
+
+            syncIdentity();
+            loadFeed();
+            // Automatically poll for updates every 4 seconds
+            setInterval(loadFeed, 4000);
+        });
+    </script>
+</body>
+</html>
+    
